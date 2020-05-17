@@ -4,8 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint . --fix -c .eslintrc.js --ext js,jsx,ts,tsx --ignore-pattern='!.*'",
-    "start": "ts-node src"
+    "dev": "ts-node-dev src",
+    "build": "tsc",
+    "lint": "eslint . --fix -c .eslintrc.js --ext js,jsx,ts,tsx --ignore-pattern='!.*'"
   },
   "devDependencies": {
     "@types/node": "^14.0.1",
@@ -13,6 +14,7 @@
     "@typescript-eslint/parser": "^2.33.0",
     "eslint": "^7.0.0",
     "ts-node": "^8.10.1",
+    "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.9.2"
   }
 }
