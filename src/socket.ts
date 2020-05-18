@@ -1,67 +1,46 @@
-import { Server, Socket } from 'socket.io';
-import { v4 as uuid } from 'uuid';
-import { stringify } from 'querystring';
+import { Server } from 'socket.io';
 
-const messageExpirationTimeMS = 10 * 1000;
+type SocketId = string
+type UserId = string
+type SocketBook = Map<SocketId, UserId>
+type numberHasSockets = number
+type UserBook = Map<UserId, numberHasSockets>
 
-export interface User {
-  id: string;
-  name: string;
-}
+const socketBook: SocketBook = new Map();
+const userBook: UserBook = new Map();
 
-const defaultUser: User = {
-  id: 'anon',
-  name: 'Anonymous',
-};
-
-export interface Message {
-  user: User;
-  id: string;
-  time: Date;
-  value: string;
-}
-
-const sendMessage = (socket: Socket | Server) =>
-  (message: Message) => socket.emit('message', message);
-
-export default (io: Server) => {
-  const messages: Set<Message> = new Set();
+export default (io: Server): void => {
 
   io.on('connection', (socket) => {
-    console.log('ユーザがログインしました');
+    console.log(`[INFO] on connection | socket.id: ${socket.id}`);
+    io.to(socket.id).emit('whoareyou');
 
-    socket.on('bye', (value: string) => {
-      console.log(value);
+    socket.on('iam', (userId: string) => {
+      console.log(`[INFO] on iam | socket.id: ${socket.id}`);
+      socketBook.set(socket.id, userId);
+      const prevCnt: number = userBook.get(userId) || 0;
+      userBook.set(userId, prevCnt + 1);
+      console.log(`userId: ${userId}`);
+      console.log(`numberHasSockets: ${prevCnt + 1}`);
+      console.log(socketBook);
+      console.log(userBook);
     });
 
-    socket.on('disconnect', (data) => {
-      console.log('disconnect!', data);
-    });
-
-    socket.on('getMessages', () => {
-      messages.forEach(sendMessage(socket));
-    });
-
-    socket.on('message', ({ socketId, text }: {socketId: string; text: string}) => {
-      const message: Message = {
-        id: uuid(),
-        time: new Date(),
-        user: defaultUser,
-        value: text,
-      };
-
-      console.log(message);
-      messages.add(message);
-
-      sendMessage(io)(message);
-
-      setTimeout(
-        () => {
-          messages.delete(message);
-          io.emit('deleteMessage', message.id);
-        },
-        messageExpirationTimeMS,
-      );
+    socket.on('disconnect', () => {
+      console.log(`[INFO] on disconnect | socket.id: ${socket.id}`);
+      const userId = socketBook.get(socket.id) || null;
+      if (userId) {
+        socketBook.delete(socket.id);
+        const prevCnt: number = userBook.get(userId) || 0;
+        userBook.set(userId, prevCnt - 1);
+        if (prevCnt - 1 >= 0) {
+          console.log('firebase GO');
+        }
+        console.log(`userId: ${userId}`);
+        console.log(`numberHasSockets: ${prevCnt - 1}`);
+        console.log(socketBook);
+        console.log(userBook);
+      }
     });
   });
 };
