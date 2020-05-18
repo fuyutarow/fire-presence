@@ -1,11 +1,17 @@
 import http from 'http';
+import express from 'express';
+import SocketIOServer from 'socket.io';
+import initializeSocketIO from './socket';
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Context-type', 'text/plain');
-  res.write('hello, world!');
-  res.end();
+const app = express();
+const port = 8080 || process.env.PORT;
+
+const server = new http.Server(app);
+
+const io = SocketIOServer(server);
+initializeSocketIO(io);
+
+server.listen(port, () => {
+  // tslint:disable-next-line:no-console
+  console.log(`server started at http://localhost:${port}`);
 });
-
-server.listen(3000);
-console.log('run');
