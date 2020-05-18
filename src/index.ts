@@ -1,5 +1,11 @@
-const hello = (name: string): string => {
-  return `Hello, ${name}!`;
-};
+import http from 'http';
 
-console.log(hello('World'));
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Context-type', 'text/plain');
+  res.write('hello, world!');
+  res.end();
+});
+
+server.listen(3000);
+console.log('run');
